@@ -1,0 +1,262 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <allegro5/allegro5.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+
+
+#define KEY_SEEN 1
+#define KEY_RELEASED 2
+#define VELOCIDADE 4
+
+
+long frames;
+long score;
+
+// Declare uma variável global para a imagem
+ALLEGRO_BITMAP* imagem = NULL;
+
+//Funcoes
+void mapa(int);
+
+//Variaveis Globais
+int map[31][28];
+
+void must_init(bool test, const char* description)
+{
+    if (test)
+        return;
+
+    printf("couldn't initialize %s\n", description);
+    exit(1);
+}
+
+bool collide(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int by2)
+{
+    if (ax1 > bx2)
+        return false;
+    if (ax2 < bx1)
+        return false;
+    if (ay1 > by2)
+        return false;
+    if (ay2 < by1)
+        return false;
+
+    return true;
+}
+
+//------------------- BUFFER -------------------
+
+
+//------------------- SPRITES ------------------
+
+
+//------------------- Start --------------------
+
+void mapa(int mod) {
+    int i, j;
+
+    char mp[31][28] = {
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, },
+            {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, },
+            {1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, },
+            {1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, },
+            {1, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 1, },
+            {1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, },
+            {1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, },
+            {1, 3, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 3, 1, },
+            {1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, },
+            {1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, },
+            {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, },
+            {1, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 1, },
+            {1, 2, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1, },
+            {1, 2, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1, },
+            {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, },
+            {1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 3, 1, },
+            {1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, },
+            {1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, },
+            {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, },
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, }
+    };
+
+    for ( i = 0; i < 31; i++)
+    {
+        for (j = 0; j < 28; j++)
+        {
+            if (mod) map[i][j] = mp[i][j];
+            //adicionar a imagem do pontos
+            if (map[i][j] == 1) map[i][j] = '|';
+            if (map[i][j] == 2) map[i][j] = '.';
+        }
+    }
+}
+
+void init()
+{
+    must_init(al_init(), "allegro");
+    must_init(al_install_keyboard(), "keyboard");
+
+    ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
+    must_init(timer, "timer");
+
+    ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
+    must_init(queue, "queue");
+
+    al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
+    al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
+    al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
+
+    ALLEGRO_DISPLAY* disp = al_create_display(640, 480);
+    must_init(disp, "display");
+
+    ALLEGRO_FONT* font = al_create_builtin_font();
+    must_init(font, "font");
+
+    must_init(al_init_primitives_addon(), "primitives");
+    //must_init(al_init_image_addon(), "image");// Inicialize o módulo de imagem
+
+    //ALLEGRO_BITMAP* imagem = al_load_bitmap("../sprites/map.png");
+    //must_init(imagem, "imagem");
+
+    al_register_event_source(queue, al_get_keyboard_event_source());
+    al_register_event_source(queue, al_get_display_event_source(disp));
+    al_register_event_source(queue, al_get_timer_event_source(timer));
+
+    bool done = false;
+    bool redraw = true;
+    ALLEGRO_EVENT event;
+
+    float x, y, dx, dy;
+    x = 100;
+    y = 100;
+    dx = 0;
+    dy = 0;
+
+    unsigned char key[ALLEGRO_KEY_MAX];
+    memset(key, 0, sizeof(key));
+
+    al_start_timer(timer);
+
+    mapa(1);
+    while (1)
+    {
+        al_wait_for_event(queue, &event);
+        mapa(0);
+        switch (event.type)
+        {
+        case ALLEGRO_EVENT_TIMER:
+            if (key[ALLEGRO_KEY_ESCAPE])
+                done = true;
+
+            x += dx;
+            y += dy;
+
+            if (x < 0)
+            {
+                x *= -1;
+                dx = 0;
+            }
+            if (x > 640)
+            {
+                x -= (x - 640) * 2;
+                dx = 0;
+            }
+            if (y < 0)
+            {
+                y *= -1;
+                dy = 0;
+            }
+            if (y > 480)
+            {
+                y -= (y - 480) * 2;
+                dy = 0;
+            }
+
+            if (key[ALLEGRO_KEY_UP])
+            {
+                dy = -VELOCIDADE;
+                dx = 0;
+            }
+            if (key[ALLEGRO_KEY_DOWN])
+            {
+                dy = VELOCIDADE;
+                dx = 0;
+            }
+
+            if (key[ALLEGRO_KEY_LEFT])
+            {
+                dx = -VELOCIDADE;
+                dy = 0;
+            }
+            if (key[ALLEGRO_KEY_RIGHT])
+            {
+                dx = VELOCIDADE;
+                dy = 0;
+            }
+
+            for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
+                key[i] &= KEY_SEEN;
+
+            // so redesenha a tela se tiver necessidade
+            // passou 1/30s ou apertou alguma tecla
+            redraw = true;
+            break;
+
+        case ALLEGRO_EVENT_KEY_DOWN:
+            key[event.keyboard.keycode] = KEY_SEEN | KEY_RELEASED;
+            break;
+        case ALLEGRO_EVENT_KEY_UP:
+            key[event.keyboard.keycode] &= KEY_RELEASED;
+            break;
+
+        case ALLEGRO_EVENT_DISPLAY_CLOSE:
+            done = true;
+            break;
+        }
+
+        if (done)
+            break;
+
+        if (redraw && al_is_event_queue_empty(queue))
+        {
+            al_clear_to_color(al_map_rgb(0, 0, 0));
+            al_draw_textf(font, al_map_rgb(255, 255, 255), 0, 0, 0, "X: %.1f Y: %.1f", x, y);
+            al_draw_filled_rectangle(x, y, x + 10, y + 10, al_map_rgb(255, 0, 0));
+
+            // Desenha a imagem
+            //al_draw_bitmap(imagem, x, y, 0);
+
+            al_flip_display();
+
+            redraw = false;
+        }
+    }
+
+    al_destroy_font(font);
+    al_destroy_display(disp);
+    al_destroy_timer(timer);
+    al_destroy_event_queue(queue);
+
+}
+
+//------------------- MAIN --------------------
+int main()
+{
+
+    init();
+    return 0;
+}
